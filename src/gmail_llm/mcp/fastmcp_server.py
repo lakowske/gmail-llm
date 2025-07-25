@@ -168,5 +168,364 @@ def create_gmail_mcp_server() -> FastMCP:
                 "message": error_msg,
                 "message_id": None
             }
+
+    @mcp.tool
+    def mark_as_read(message_id: str) -> Dict[str, Any]:
+        """
+        Mark an email as read by removing the UNREAD label.
+        
+        Args:
+            message_id: Gmail message ID to mark as read
+        
+        Returns:
+            Dictionary containing success status and message
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Mark as read
+            result = connector.mark_as_read(message_id)
+            
+            logger.info(f"Mark as read result for {message_id}: {result}")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error marking email as read: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+    @mcp.tool
+    def mark_as_spam(message_id: str) -> Dict[str, Any]:
+        """
+        Mark an email as spam by moving it to the spam folder.
+        
+        Args:
+            message_id: Gmail message ID to mark as spam
+        
+        Returns:
+            Dictionary containing success status and message
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Mark as spam
+            result = connector.mark_as_spam(message_id)
+            
+            logger.info(f"Mark as spam result for {message_id}: {result}")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error marking email as spam: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+    @mcp.tool
+    def move_to_trash(message_id: str) -> Dict[str, Any]:
+        """
+        Move an email to trash.
+        
+        Args:
+            message_id: Gmail message ID to move to trash
+        
+        Returns:
+            Dictionary containing success status and message
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Move to trash
+            result = connector.move_to_trash(message_id)
+            
+            logger.info(f"Move to trash result for {message_id}: {result}")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error moving email to trash: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+    @mcp.tool
+    def add_star(message_id: str) -> Dict[str, Any]:
+        """
+        Add a star to an email.
+        
+        Args:
+            message_id: Gmail message ID to star
+        
+        Returns:
+            Dictionary containing success status and message
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Add star
+            result = connector.add_star(message_id)
+            
+            logger.info(f"Add star result for {message_id}: {result}")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error adding star to email: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+    @mcp.tool
+    def get_available_labels() -> Dict[str, Any]:
+        """
+        Get list of available labels in the Gmail account.
+        
+        Returns:
+            Dictionary containing success status, message, and list of labels
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Get labels
+            result = connector.get_available_labels()
+            
+            logger.info(f"Retrieved {len(result.get('labels', []))} labels")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error retrieving labels: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg,
+                "labels": []
+            }
+
+    @mcp.tool
+    def modify_labels(message_id: str, add_labels: str = "", remove_labels: str = "") -> Dict[str, Any]:
+        """
+        Modify labels on an email by adding or removing specific labels.
+        
+        Args:
+            message_id: Gmail message ID to modify
+            add_labels: Comma-separated list of label IDs to add (e.g., "STARRED,IMPORTANT")
+            remove_labels: Comma-separated list of label IDs to remove (e.g., "UNREAD,INBOX")
+        
+        Returns:
+            Dictionary containing success status and message
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Parse label lists
+            add_list = [label.strip() for label in add_labels.split(",") if label.strip()] if add_labels else None
+            remove_list = [label.strip() for label in remove_labels.split(",") if label.strip()] if remove_labels else None
+            
+            # Modify labels
+            result = connector.modify_labels(message_id, add_list, remove_list)
+            
+            logger.info(f"Modify labels result for {message_id}: {result}")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error modifying email labels: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+    @mcp.tool
+    def bulk_mark_as_read(message_ids: str) -> Dict[str, Any]:
+        """
+        Mark multiple emails as read by removing the UNREAD label.
+        
+        Args:
+            message_ids: Comma-separated list of Gmail message IDs to mark as read
+        
+        Returns:
+            Dictionary containing success status, summary, and detailed results
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Parse message IDs
+            id_list = [msg_id.strip() for msg_id in message_ids.split(",") if msg_id.strip()]
+            
+            if not id_list:
+                return {"success": False, "message": "No message IDs provided"}
+            
+            # Bulk mark as read
+            result = connector.bulk_mark_as_read(id_list)
+            
+            logger.info(f"Bulk mark as read result for {len(id_list)} messages: {result['successful_count']}/{result['total_messages']} successful")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error bulk marking emails as read: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+    @mcp.tool
+    def bulk_mark_as_spam(message_ids: str) -> Dict[str, Any]:
+        """
+        Mark multiple emails as spam by moving them to the spam folder.
+        
+        Args:
+            message_ids: Comma-separated list of Gmail message IDs to mark as spam
+        
+        Returns:
+            Dictionary containing success status, summary, and detailed results
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Parse message IDs
+            id_list = [msg_id.strip() for msg_id in message_ids.split(",") if msg_id.strip()]
+            
+            if not id_list:
+                return {"success": False, "message": "No message IDs provided"}
+            
+            # Bulk mark as spam
+            result = connector.bulk_mark_as_spam(id_list)
+            
+            logger.info(f"Bulk mark as spam result for {len(id_list)} messages: {result['successful_count']}/{result['total_messages']} successful")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error bulk marking emails as spam: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+    @mcp.tool
+    def bulk_move_to_trash(message_ids: str) -> Dict[str, Any]:
+        """
+        Move multiple emails to trash.
+        
+        Args:
+            message_ids: Comma-separated list of Gmail message IDs to move to trash
+        
+        Returns:
+            Dictionary containing success status, summary, and detailed results
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Parse message IDs
+            id_list = [msg_id.strip() for msg_id in message_ids.split(",") if msg_id.strip()]
+            
+            if not id_list:
+                return {"success": False, "message": "No message IDs provided"}
+            
+            # Bulk move to trash
+            result = connector.bulk_move_to_trash(id_list)
+            
+            logger.info(f"Bulk move to trash result for {len(id_list)} messages: {result['successful_count']}/{result['total_messages']} successful")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error bulk moving emails to trash: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+    @mcp.tool
+    def bulk_add_star(message_ids: str) -> Dict[str, Any]:
+        """
+        Add star to multiple emails.
+        
+        Args:
+            message_ids: Comma-separated list of Gmail message IDs to star
+        
+        Returns:
+            Dictionary containing success status, summary, and detailed results
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Parse message IDs
+            id_list = [msg_id.strip() for msg_id in message_ids.split(",") if msg_id.strip()]
+            
+            if not id_list:
+                return {"success": False, "message": "No message IDs provided"}
+            
+            # Bulk add star
+            result = connector.bulk_add_star(id_list)
+            
+            logger.info(f"Bulk add star result for {len(id_list)} messages: {result['successful_count']}/{result['total_messages']} successful")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error bulk adding stars to emails: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg
+            }
+
+    @mcp.tool
+    def bulk_modify_labels(message_ids: str, add_labels: str = "", remove_labels: str = "") -> Dict[str, Any]:
+        """
+        Modify labels on multiple emails by adding or removing specific labels.
+        
+        Args:
+            message_ids: Comma-separated list of Gmail message IDs to modify
+            add_labels: Comma-separated list of label IDs to add (e.g., "STARRED,IMPORTANT")
+            remove_labels: Comma-separated list of label IDs to remove (e.g., "UNREAD,INBOX")
+        
+        Returns:
+            Dictionary containing success status, summary, and detailed results
+        """
+        try:
+            # Initialize Gmail if needed
+            connector = initialize_gmail()
+            
+            # Parse message IDs
+            id_list = [msg_id.strip() for msg_id in message_ids.split(",") if msg_id.strip()]
+            
+            if not id_list:
+                return {"success": False, "message": "No message IDs provided"}
+            
+            # Parse label lists
+            add_list = [label.strip() for label in add_labels.split(",") if label.strip()] if add_labels else None
+            remove_list = [label.strip() for label in remove_labels.split(",") if label.strip()] if remove_labels else None
+            
+            # Bulk modify labels
+            result = connector.bulk_modify_labels(id_list, add_list, remove_list)
+            
+            logger.info(f"Bulk modify labels result for {len(id_list)} messages: {result['successful_count']}/{result['total_messages']} successful")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Error bulk modifying email labels: {str(e)}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "message": error_msg
+            }
     
     return mcp

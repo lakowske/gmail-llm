@@ -14,10 +14,11 @@ from googleapiclient.discovery import build
 
 logger = logging.getLogger(__name__)
 
-# Gmail API scopes for reading and sending emails
+# Gmail API scopes for reading, sending, and modifying emails
 SCOPES = [
     'https://www.googleapis.com/auth/gmail.readonly',
-    'https://www.googleapis.com/auth/gmail.send'
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/gmail.modify'
 ]
 
 
