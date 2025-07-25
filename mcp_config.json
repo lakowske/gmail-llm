@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "gmail-llm-connector": {
+      "command": "python",
+      "args": ["mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "./src"
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+# Encrypted credential files
+*.encrypted
+*.salt
+
+# OAuth tokens
+token.pickle
+temp_credentials.json
+
+# Google API credentials
+credentials.json
+
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/*.log
+logs/*.out
+logs/*.err
+
+# Environment variables
+.env
+.env.local
