@@ -13,10 +13,10 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}Gmail FastMCP Server Management Script${NC}"
 echo "======================================"
 
-# Check if supervisor is installed
-if ! command -v supervisord &> /dev/null; then
-    echo -e "${RED}Error: supervisord is not installed${NC}"
-    echo "Install with: pip install supervisor"
+# Check if supervisor is installed in venv
+if [ ! -f ".venv/bin/supervisord" ]; then
+    echo -e "${RED}Error: supervisord is not installed in virtual environment${NC}"
+    echo "Install with: .venv/bin/pip install supervisor"
     exit 1
 fi
 
@@ -44,21 +44,21 @@ start_supervisor() {
     # Stop any existing supervisord process
     if [ -f /tmp/supervisord.pid ]; then
         echo "Stopping existing supervisord process..."
-        supervisorctl -c supervisord.conf shutdown 2>/dev/null || true
+        .venv/bin/supervisorctl -c supervisord.conf shutdown 2>/dev/null || true
         sleep 2
     fi
     
     # Start supervisord (it will inherit the environment variable)
-    supervisord -c supervisord.conf
+    .venv/bin/supervisord -c supervisord.conf
     
     # Clear the password from current shell environment for security
     unset GMAIL_MCP_PASSWORD
     
-    # Wait a moment for startup
-    sleep 3
+    # Wait for startup (supervisor needs 10 seconds to confirm RUNNING status)
+    sleep 12
     
     # Check status
-    if supervisorctl -c supervisord.conf status gmail-fastmcp-server | grep -q "RUNNING"; then
+    if .venv/bin/supervisorctl -c supervisord.conf status gmail-fastmcp-server | grep -q "RUNNING"; then
         echo -e "${GREEN}✓ Gmail FastMCP Server started successfully${NC}"
         echo -e "${GREEN}✓ Server running on http://localhost:8001/mcp/${NC}"
         echo -e "${GREEN}✓ Logs available in ./logs/gmail-fastmcp-server.log${NC}"
@@ -75,21 +75,21 @@ start_supervisor() {
 # Function to show status
 show_status() {
     echo -e "${YELLOW}Gmail FastMCP Server Status:${NC}"
-    supervisorctl -c supervisord.conf status gmail-fastmcp-server
+    .venv/bin/supervisorctl -c supervisord.conf status gmail-fastmcp-server
 }
 
 # Function to stop server
 stop_server() {
     echo -e "${YELLOW}Stopping Gmail FastMCP Server...${NC}"
-    supervisorctl -c supervisord.conf stop gmail-fastmcp-server
-    supervisorctl -c supervisord.conf shutdown
+    .venv/bin/supervisorctl -c supervisord.conf stop gmail-fastmcp-server
+    .venv/bin/supervisorctl -c supervisord.conf shutdown
     echo -e "${GREEN}✓ Server stopped${NC}"
 }
 
 # Function to restart server
 restart_server() {
     echo -e "${YELLOW}Restarting Gmail FastMCP Server...${NC}"
-    supervisorctl -c supervisord.conf restart gmail-fastmcp-server
+    .venv/bin/supervisorctl -c supervisord.conf restart gmail-fastmcp-server
     echo -e "${GREEN}✓ Server restarted${NC}"
 }
 
