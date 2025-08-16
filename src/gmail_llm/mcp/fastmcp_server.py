@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 def create_gmail_mcp_server() -> FastMCP:
     """Create and configure a FastMCP server for Gmail operations."""
     
-    # Initialize FastMCP server
+    # Initialize FastMCP server without authentication for now
+    # We'll add OAuth support once we verify the basic connection works
     mcp = FastMCP("Gmail LLM Connector")
 
     @mcp.tool
