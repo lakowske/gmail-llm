@@ -1,0 +1,13 @@
+  {
+    "mcpServers": {
+      "gmail": {
+        "command": "npx",
+        "args": [
+          "mcp-remote",
+          "http://localhost:8001/mcp",
+          "--static-oauth-client-metadata",
+          "{}"
+        ]
+      }
+    }
+  }

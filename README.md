@@ -1,210 +1,249 @@
 # Gmail LLM Connector
 
-A Python script to connect to Gmail inbox using the Gmail API with OAuth 2.0 authentication.
+A robust, production-ready Gmail integration system providing both MCP (Model Context Protocol) and HTTP API access to Gmail operations with encrypted credential management.
 
-## Setup
-
-1. **Create a Google Cloud Project**:
-   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select an existing one
-   - Enable the Gmail API
-
-2. **Create OAuth 2.0 Credentials**:
-   - Go to "Credentials" in the Google Cloud Console
-   - Click "Create Credentials" > "OAuth client ID"
-   - Choose "Desktop application"
-   - Download the JSON file and save it as `credentials.json` in this directory
-
-3. **Install Dependencies**:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-
-4. **Encrypt Credentials (Recommended)**:
-   ```bash
-   python setup_encrypted_credentials.py
-   ```
-   This will encrypt your `credentials.json` file with a password you choose.
-
-5. **Run the Script**:
-   ```bash
-   # Read emails (default command)
-   python gmail_connector.py --encrypted
-   
-   # Send an email
-   python gmail_connector.py --encrypted send --to "recipient@example.com" --subject "Test Subject" --message "Hello, this is a test message!"
-   
-   # Read emails with search query
-   python gmail_connector.py --encrypted read --query "is:unread" --max-results 10
-   ```
-
-## Features
-
-- OAuth 2.0 authentication with Gmail API
-- **Send emails** directly from command line
-- **Encrypted credential storage** with password protection
-- Retrieve messages from Gmail inbox
-- Extract key message information (sender, subject, date, snippet)
-- **Advanced search queries** (unread, from specific senders, etc.)
-- Comprehensive error handling and logging
-- Token caching for subsequent runs
-
-## Usage
-
-### Command Line Interface
-
-**Send Email:**
-```bash
-# Basic email
-python gmail_connector.py --encrypted send --to "user@example.com" --subject "Hello" --message "This is a test email"
-
-# Email with HTML content
-python gmail_connector.py --encrypted send --to "user@example.com" --subject "Rich Email" --message "Plain text version" --html "<h1>HTML Version</h1><p>This is <b>bold</b>!</p>"
-```
-
-**Read Emails:**
-```bash
-# Read recent emails
-python gmail_connector.py --encrypted read
-
-# Search for unread emails
-python gmail_connector.py --encrypted read --query "is:unread" --max-results 20
-
-# Search emails from specific sender
-python gmail_connector.py --encrypted read --query "from:example@gmail.com"
-```
-
-### Python API
-
-The `GmailConnector` class provides methods to:
-- `authenticate()`: Authenticate with Gmail API
-- `send_email(to, subject, message_text, html_content)`: Send emails
-- `get_messages(query, max_results)`: Retrieve messages with optional query
-- `extract_message_info(message)`: Extract readable information from raw message data
-
-## Credential Encryption
-
-The system supports encrypted credential storage using:
-- **Fernet encryption** (symmetric encryption)
-- **PBKDF2** key derivation with 100,000 iterations
-- **Salt-based security** to prevent rainbow table attacks
-- **Automatic cleanup** of temporary credential files
-
-### Manual Encryption/Decryption
+## 🚀 **Quick Start**
 
 ```bash
-# Encrypt credentials manually
-python credential_manager.py encrypt credentials.json
-
-# Test decryption
-python credential_manager.py decrypt
-```
-
-## Security
-
-- Uses OAuth 2.0 for secure authentication
-- **Encrypted credential storage** with strong encryption
-- Credentials and tokens are stored locally
-- Read-only access to Gmail (gmail.readonly scope)
-- **Automatic cleanup** of temporary files
-- **Password-based encryption** for API credentials
-
-## MCP Server
-
-The project includes a FastAPI-based MCP (Model Context Protocol) server that allows LLMs to interact with Gmail through standardized tools.
-
-### Starting the MCP Server
-
-**Option 1: Simple Start**
-```bash
-# Install dependencies including FastAPI and MCP
+# Clone and setup
+git clone <repository>
+cd gmail-llm
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-# Start the MCP server directly
-python mcp_server.py
+# Encrypt your Gmail credentials
+python setup_encrypted_credentials.py
+
+# Start both MCP and HTTP API servers
+./start_mcp_server.sh
 ```
 
-**Option 2: Managed with Supervisor (Recommended for long-running)**
+**Servers will be available at:**
+- 🔗 **MCP Server:** `http://127.0.0.1:8001/mcp` (for Claude Code)
+- 🌐 **HTTP API:** `http://127.0.0.1:8000` (for other services)
+- 📚 **API Docs:** `http://127.0.0.1:8000/docs`
+
+## 🏗️ **Architecture**
+
+### **Dual-Server Design**
+- **MCP Server** (port 8001): Claude Code integration via Model Context Protocol
+- **HTTP API Server** (port 8000): REST API for other services and applications
+- **Shared Gmail Factory**: Single authentication across both servers
+- **Supervisor Management**: Independent process control and monitoring
+
+### **Key Features**
+✅ **Encrypted Credentials** - Password-protected OAuth tokens and API credentials  
+✅ **Dual Protocol Support** - Both MCP and HTTP API access  
+✅ **Process Isolation** - Separate supervisor-managed processes  
+✅ **Structured Logging** - JSON logs with correlation tracking  
+✅ **Environment Configuration** - Configurable via environment variables  
+✅ **Production Ready** - Error handling, retries, and monitoring  
+
+## 🔧 **Setup Guide**
+
+### **1. Google Cloud Setup**
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a project and enable the Gmail API
+3. Create OAuth 2.0 credentials (Desktop application)
+4. Download `credentials.json` to this directory
+
+### **2. Credential Encryption**
 ```bash
-# Install supervisor
-pip install supervisor
-
-# Start with the management script
-./start_mcp_server.sh start
-
-# Other management commands
-./start_mcp_server.sh status    # Check status
-./start_mcp_server.sh logs      # View recent logs
-./start_mcp_server.sh follow    # Follow logs in real-time
-./start_mcp_server.sh restart   # Restart server
-./start_mcp_server.sh stop      # Stop server
+python setup_encrypted_credentials.py
+# Enter your desired encryption password
+# This creates credentials.encrypted and credentials_token.encrypted
 ```
 
-The server will start on `http://localhost:8000` with the following endpoints:
+### **3. Server Deployment**
+```bash
+# Start both servers with supervisor
+./start_mcp_server.sh
 
-- `GET /` - Server status and information
-- `GET /health` - Health check endpoint
-- `POST /mcp/tools/list` - List available MCP tools
-- `POST /mcp/tools/call` - Call MCP tools
-- `POST /tools/{tool_name}` - Direct tool calling (non-MCP)
-
-### Available MCP Tools
-
-**`read_emails`** - Read emails from Gmail inbox
-```json
-{
-  "name": "read_emails",
-  "arguments": {
-    "query": "is:unread",
-    "max_results": 10
-  }
-}
+# Or use individual startup scripts
+python start_mcp_server.py    # MCP only
+python start_api_server.py    # HTTP API only
 ```
 
-**`send_email`** - Send an email via Gmail
-```json
-{
-  "name": "send_email", 
-  "arguments": {
+## 📡 **HTTP API Usage**
+
+### **Check Emails**
+```bash
+# Get unread emails
+curl "http://127.0.0.1:8000/api/emails?query=is:unread&max_results=5" | jq .
+
+# Search by sender
+curl "http://127.0.0.1:8000/api/emails?query=from:example.com&max_results=10" | jq .
+```
+
+### **Send Email**
+```bash
+curl -X POST "http://127.0.0.1:8000/api/emails/send" \
+  -H "Content-Type: application/json" \
+  -d '{
     "to": "recipient@example.com",
-    "subject": "Test Email",
-    "message": "Hello from MCP server!",
-    "html_content": "<h1>Hello from MCP server!</h1>"
-  }
-}
+    "subject": "Hello from API",
+    "message": "This email was sent via the Gmail LLM HTTP API!"
+  }'
 ```
 
-### Using with Claude Code
-
-Add the MCP server to your Claude Code configuration:
-
+### **Email Management**
 ```bash
-# Add MCP server to Claude Code
-claude mcp add-json gmail-llm-connector '{"command": "python", "args": ["mcp_server.py"], "env": {"PYTHONPATH": "./src"}}'
+# Mark as read
+curl -X POST "http://127.0.0.1:8000/api/emails/{message_id}/mark-read"
+
+# Move to trash
+curl -X POST "http://127.0.0.1:8000/api/emails/{message_id}/trash"
+
+# Add star
+curl -X POST "http://127.0.0.1:8000/api/emails/{message_id}/star"
 ```
 
-Or use the provided configuration file:
+## 🔌 **MCP Integration (Claude Code)**
+
+### **Add to Claude Code**
 ```bash
-claude --mcp-config mcp_config.json
+# Using the .mcp.json configuration
+claude mcp add-json gmail-llm-connector '{"command": "python", "args": ["start_mcp_server.py"], "env": {"PYTHONPATH": "./src"}}'
 ```
 
-### MCP Server Features
+### **Usage in Claude Code**
+```
+# Check your inbox
+Can you check my Gmail inbox?
 
-- **Secure Authentication** - Uses encrypted Gmail credentials
-- **Standard MCP Protocol** - Compatible with any MCP client
-- **Comprehensive Logging** - Full request/response logging
-- **Error Handling** - Graceful error handling and reporting
-- **Health Monitoring** - Built-in health check endpoints
-- **CORS Support** - Cross-origin requests enabled
-- **Process Management** - Supervisor configuration for production use
-- **Log Management** - Structured logging with rotation
+# Send emails
+Send an email to john@example.com with subject "Meeting Tomorrow" 
 
-### Logs and Monitoring
+# Email management
+Mark the latest email from HR as read
+```
 
-Server logs are stored in `./logs/` directory:
-- `gmail-mcp-server.log` - Application logs
-- `supervisord.log` - Supervisor process logs
+## 🛠️ **Management Commands**
 
-Log files are automatically rotated when they reach 50MB, keeping 10 backup files.
+### **Server Control**
+```bash
+# Start/stop/restart
+./start_mcp_server.sh start
+./start_mcp_server.sh stop  
+./start_mcp_server.sh restart
+
+# Check status
+./start_mcp_server.sh status
+
+# View logs
+./start_mcp_server.sh logs
+./start_mcp_server.sh follow  # Real-time logs
+```
+
+### **Individual Server Control**
+```bash
+# Using supervisor directly
+supervisorctl start gmail-servers:*
+supervisorctl restart gmail-mcp-server
+supervisorctl restart gmail-api-server
+supervisorctl status gmail-servers:*
+```
+
+## ⚙️ **Configuration**
+
+### **Environment Variables**
+```bash
+export GMAIL_CREDENTIALS_PATH="credentials.encrypted"
+export GMAIL_MCP_HOST="127.0.0.1"
+export GMAIL_MCP_PORT="8001"
+export GMAIL_API_HOST="127.0.0.1" 
+export GMAIL_API_PORT="8000"
+export GMAIL_LOG_LEVEL="info"
+export GMAIL_MCP_PASSWORD="your_encryption_password"  # For non-interactive use
+```
+
+### **Configuration Files**
+- `supervisord.conf` - Supervisor process management
+- `.mcp.json` - MCP server configuration for Claude Code
+- `src/gmail_llm/config.py` - Centralized application configuration
+
+## 📁 **Project Structure**
+
+```
+gmail-llm/
+├── src/gmail_llm/           # Main application code
+│   ├── api/                 # HTTP API server
+│   ├── auth/                # OAuth and encryption
+│   ├── core/                # Gmail connector
+│   ├── email/               # Email operations  
+│   ├── mcp/                 # MCP server
+│   ├── security/            # Credential management
+│   └── shared/              # Shared utilities
+├── start_mcp_server.py      # MCP server startup
+├── start_api_server.py      # HTTP API startup
+├── start_mcp_server.sh      # Management script
+├── supervisord.conf         # Process management
+├── legacy/                  # Archived old files
+└── docs/                    # Documentation
+```
+
+## 🔍 **Monitoring & Debugging**
+
+### **Health Checks**
+```bash
+# API health
+curl http://127.0.0.1:8000/health
+
+# Check server status
+supervisorctl status gmail-servers:*
+```
+
+### **Logs**
+```bash
+# Structured JSON logs
+tail -f logs/gmail-mcp-server.log
+tail -f logs/gmail-api-server.log
+tail -f logs/supervisord.log
+```
+
+### **Troubleshooting**
+- **Authentication issues**: Check encrypted credentials and password
+- **Port conflicts**: Modify ports in environment variables
+- **Permission errors**: Ensure proper file permissions on credential files
+- **API errors**: Check logs for detailed error messages with correlation IDs
+
+## 📖 **Additional Documentation**
+
+- [API Usage Guide](API_USAGE.md) - Comprehensive HTTP API documentation
+- [Supervisor Architecture](SUPERVISOR_ARCHITECTURE.md) - Process management details
+- [Encrypted Credentials](ENCRYPTED_CREDENTIALS_INTEGRATION.md) - Security implementation
+- [Refactoring Summary](REFACTORING_SUMMARY.md) - Technical improvements made
+
+## 🧪 **Development**
+
+### **Adding New Features**
+1. Use the shared Gmail factory for authentication
+2. Follow the established decorator patterns for error handling
+3. Add structured logging with correlation IDs
+4. Update both MCP and HTTP API endpoints as needed
+
+### **Testing**
+```bash
+# Test HTTP API
+curl -s "http://127.0.0.1:8000/api/emails?max_results=1" | jq .
+
+# Test MCP via Claude Code
+# Use Claude Code to check your inbox
+```
+
+## 🔒 **Security**
+
+- **Encrypted Credentials**: OAuth tokens and API credentials encrypted at rest
+- **Password Protection**: Master password required for credential access
+- **Localhost Only**: Servers bind to 127.0.0.1 (no external access)
+- **Environment Isolation**: Separate processes for better security boundaries
+- **Audit Logging**: All operations logged with correlation tracking
+
+## 📝 **License**
+
+[Add your license information here]
+
+---
+
+**Gmail LLM Connector** - Secure, scalable Gmail integration for AI applications

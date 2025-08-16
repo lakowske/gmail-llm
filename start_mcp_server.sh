@@ -57,54 +57,66 @@ start_supervisor() {
     # Wait for startup (supervisor needs 10 seconds to confirm RUNNING status)
     sleep 12
     
-    # Check status
-    if .venv/bin/supervisorctl -c supervisord.conf status gmail-fastmcp-server | grep -q "RUNNING"; then
-        echo -e "${GREEN}✓ Gmail FastMCP Server started successfully${NC}"
-        echo -e "${GREEN}✓ Server running on http://localhost:8001/mcp/${NC}"
-        echo -e "${GREEN}✓ Logs available in ./logs/gmail-fastmcp-server.log${NC}"
+    # Check status of both servers
+    mcp_status=$(.venv/bin/supervisorctl -c supervisord.conf status gmail-mcp-server 2>/dev/null | grep -o "RUNNING" || echo "NOT_RUNNING")
+    api_status=$(.venv/bin/supervisorctl -c supervisord.conf status gmail-api-server 2>/dev/null | grep -o "RUNNING" || echo "NOT_RUNNING")
+    
+    if [ "$mcp_status" = "RUNNING" ] && [ "$api_status" = "RUNNING" ]; then
+        echo -e "${GREEN}✓ Gmail servers started successfully${NC}"
+        echo -e "${GREEN}✓ MCP Server running on http://127.0.0.1:8001/mcp${NC}"
+        echo -e "${GREEN}✓ HTTP API Server running on http://127.0.0.1:8000${NC}"
+        echo -e "${GREEN}✓ API Documentation: http://127.0.0.1:8000/docs${NC}"
+        echo -e "${GREEN}✓ Logs available in ./logs/gmail-mcp-server.log and ./logs/gmail-api-server.log${NC}"
         echo -e "${YELLOW}Note: Password is securely stored in server process memory${NC}"
     else
-        echo -e "${RED}✗ Failed to start Gmail FastMCP Server${NC}"
+        echo -e "${RED}✗ Failed to start Gmail servers${NC}"
+        echo "Status: MCP=$mcp_status, API=$api_status"
         echo "Check logs for details:"
         echo "  supervisord logs: ./logs/supervisord.log"
-        echo "  server logs: ./logs/gmail-fastmcp-server.log"
+        echo "  mcp server logs: ./logs/gmail-mcp-server.log"
+        echo "  api server logs: ./logs/gmail-api-server.log"
         exit 1
     fi
 }
 
 # Function to show status
 show_status() {
-    echo -e "${YELLOW}Gmail FastMCP Server Status:${NC}"
-    .venv/bin/supervisorctl -c supervisord.conf status gmail-fastmcp-server
+    echo -e "${YELLOW}Gmail Servers Status:${NC}"
+    .venv/bin/supervisorctl -c supervisord.conf status gmail-servers:*
 }
 
 # Function to stop server
 stop_server() {
-    echo -e "${YELLOW}Stopping Gmail FastMCP Server...${NC}"
-    .venv/bin/supervisorctl -c supervisord.conf stop gmail-fastmcp-server
+    echo -e "${YELLOW}Stopping Gmail servers...${NC}"
+    .venv/bin/supervisorctl -c supervisord.conf stop gmail-servers:*
     .venv/bin/supervisorctl -c supervisord.conf shutdown
-    echo -e "${GREEN}✓ Server stopped${NC}"
+    echo -e "${GREEN}✓ Servers stopped${NC}"
 }
 
 # Function to restart server
 restart_server() {
-    echo -e "${YELLOW}Restarting Gmail FastMCP Server...${NC}"
-    .venv/bin/supervisorctl -c supervisord.conf restart gmail-fastmcp-server
-    echo -e "${GREEN}✓ Server restarted${NC}"
+    echo -e "${YELLOW}Restarting Gmail servers...${NC}"
+    .venv/bin/supervisorctl -c supervisord.conf restart gmail-servers:*
+    echo -e "${GREEN}✓ Servers restarted${NC}"
 }
 
 # Function to show logs
 show_logs() {
-    echo -e "${YELLOW}Gmail FastMCP Server Logs (last 50 lines):${NC}"
+    echo -e "${YELLOW}Gmail MCP Server Logs (last 50 lines):${NC}"
     echo "=========================================="
-    tail -n 50 ./logs/gmail-fastmcp-server.log
+    tail -n 50 ./logs/gmail-mcp-server.log
+    echo ""
+    echo -e "${YELLOW}Gmail API Server Logs (last 50 lines):${NC}"
+    echo "=========================================="
+    tail -n 50 ./logs/gmail-api-server.log
 }
 
 # Function to follow logs
 follow_logs() {
-    echo -e "${YELLOW}Following Gmail FastMCP Server Logs (Ctrl+C to exit):${NC}"
+    echo -e "${YELLOW}Following Gmail Server Logs (Ctrl+C to exit):${NC}"
     echo "==================================================="
-    tail -f ./logs/gmail-fastmcp-server.log
+    # Follow both log files simultaneously
+    tail -f ./logs/gmail-mcp-server.log ./logs/gmail-api-server.log
 }
 
 # Parse command line arguments
@@ -131,9 +143,9 @@ case "${1:-start}" in
         echo "Usage: $0 {start|stop|restart|status|logs|follow}"
         echo ""
         echo "Commands:"
-        echo "  start   - Start the Gmail FastMCP Server (default)"
-        echo "  stop    - Stop the Gmail FastMCP Server"
-        echo "  restart - Restart the Gmail FastMCP Server"
+        echo "  start   - Start the Gmail servers (MCP + HTTP API) (default)"
+        echo "  stop    - Stop the Gmail servers"
+        echo "  restart - Restart the Gmail servers" 
         echo "  status  - Show server status"
         echo "  logs    - Show recent server logs"
         echo "  follow  - Follow server logs in real-time"

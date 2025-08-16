@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__gmail__read_emails",
+      "Bash(mv:*)",
+      "Bash(python:*)",
+      "Bash(chmod:*)",
+      "Bash(.venv/bin/supervisorctl:*)",
+      "Bash(grep:*)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "gmail"
+  ]
+}
